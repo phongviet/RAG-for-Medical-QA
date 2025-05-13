@@ -9,7 +9,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 class MedicalQASystem:
     def __init__(self, index_dir, model_name="Qwen/Qwen2.5-0.5B-Instruct",
-                 encoder_name="all-MiniLM-L6-v2", top_k=1):
+                 encoder_name="all-MiniLM-L6-v2", top_k=3):
         """
         Initialize the Medical QA system with RAG components
 
@@ -75,19 +75,26 @@ class MedicalQASystem:
 
         context_str = "\n\n".join(context_parts)
 
-        prompt = f"""You are an expert medical assistant providing information to healthcare professionals. 
-    Use the reference information below to answer the medical question.
+        prompt = f"""You are a highly knowledgeable medical assistant providing accurate and professional information to healthcare professionals.
+Use the reference information below to answer the medical question comprehensively.
 
-    Reference Information:
-    {context_str}
+Reference Information:
+{context_str}
 
-    Question: {query}
+Question: {query}
 
-    Provide a clear, well-organized, and comprehensive medical answer. Use medical terminology appropriately. 
-    Only include information that can be derived from the references. Format the answer in a professional style 
-    suitable for medical professionals. Do not mention the references explicitly in your answer.
+Instructions:
+1. Provide a clear, concise, and well-organized medical answer.
+2. Use appropriate medical terminology and maintain a professional tone.
+3. Base your answer strictly on the provided reference information.
+4. Do not include any citation numbers, references, or footnote markers (e.g., [1], [2], etc.).
+5. Do not mention the references explicitly in your answer.
+6. Avoid adding phrases like 'End of Medical Answer' or similar concluding statements.
 
-    Answer:"""
+Always conclude your answer with this exact disclaimer:
+"Please consult with a qualified healthcare professional for accurate diagnosis and personalized medical advice."
+
+Answer:"""
         return prompt
 
     def generate_answer(self, prompt):
@@ -97,10 +104,10 @@ class MedicalQASystem:
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=512,
-                temperature=0.7,
+                max_new_tokens=1024,
+                temperature=0.5,
                 do_sample=True,
-                top_p=0.9,
+                top_p=0.85,
                 num_return_sequences=1
             )
 
