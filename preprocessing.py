@@ -105,5 +105,5 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
 if __name__ == "__main__":
     create_faiss_index_from_xml(
         "data/raw",
-        "data/faiss_index1"
+        "data/faiss_index1",
     )
