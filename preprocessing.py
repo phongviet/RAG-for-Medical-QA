@@ -52,7 +52,7 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
                         # Store full QA pair for retrieval
                         qa_data.append({
                             "prompt": f"{document}\n\nAnswer:",
-                            "completion": answer_text
+                            "completion": answer_text,
                         })
         except Exception as e:
             print(f"Error processing {xml_file}: {e}")
