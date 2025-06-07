@@ -23,22 +23,22 @@ class MedicalQASystem:
         self.index_dir = index_dir
         self.top_k = top_k
 
-        # Load document mappings
+        # Tải ánh xạ tài liệu
         with open(os.path.join(index_dir, "documents.json"), "r") as f:
             self.documents = json.load(f)
 
         with open(os.path.join(index_dir, "qa_mapping.json"), "r") as f:
             self.qa_mapping = json.load(f)
 
-        # Load FAISS index
+        # Tải chỉ mục FAISS
         self.index = faiss.read_index(os.path.join(index_dir, "qa_index.faiss"))
         print(f"Loaded FAISS index with {self.index.ntotal} vectors")
 
-        # Load sentence encoder model
+        # Tải mô hình mã hóa câu
         print(f"Loading sentence encoder: {encoder_name}")
         self.encoder = SentenceTransformer(encoder_name)
 
-        # Load language model for answer generation
+        # Tải mô hình ngôn ngữ để tạo câu trả lời
         print(f"Loading language model: {model_name}")
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -51,14 +51,14 @@ class MedicalQASystem:
 
     def retrieve(self, query):
         """Retrieve relevant documents for a query"""
-        # Encode the query
+        # Mã hóa truy vấn
         query_embedding = self.encoder.encode([query], convert_to_tensor=True)
         query_embedding_np = query_embedding.cpu().numpy()
 
-        # Search in FAISS index
+        # Tìm kiếm trong chỉ mục FAISS
         distances, indices = self.index.search(query_embedding_np, self.top_k)
 
-        # Get the corresponding documents
+        # Nhận các tài liệu tương ứng
         retrieved_docs = [self.documents[idx] for idx in indices[0]]
         retrieved_answers = [self.qa_mapping[idx]["completion"] for idx in indices[0]]
 
@@ -66,12 +66,12 @@ class MedicalQASystem:
 
     def format_prompt(self, query, retrieved_docs):
         """Format prompt with retrieved context"""
-        # Prepare context from retrieved documents in a structured way
+        # Chuẩn bị ngữ cảnh từ các tài liệu đã thu thập theo cách có cấu trúc
         context_parts = []
         for i, doc in enumerate(retrieved_docs):
-            # Extract topic from document
+            # Trích xuất chủ đề từ tài liệu
             topic_part = doc[0].split("\n\n")[0].replace("Topic: ", "")
-            # Include retrieved answer as reference
+            # Bao gồm câu trả lời đã lấy làm tài liệu tham khảo
             context_parts.append(f"Reference {i + 1} on {topic_part}:\n{doc[2]}")
 
         context_str = "\n\n".join(context_parts)
@@ -121,13 +121,13 @@ class MedicalQASystem:
 
     def answer_question(self, query):
         """End-to-end question answering"""
-        # Retrieve relevant documents
+        # Truy xuất các tài liệu liên quan
         retrieved_docs = self.retrieve(query)
 
-        # Format prompt with retrieved context
+        # Định dạng nhắc nhở với ngữ cảnh được lấy lại
         prompt = self.format_prompt(query, retrieved_docs)
 
-        # Generate answer
+        # Tạo câu trả lời
         answer = self.generate_answer(prompt)
 
         return {
@@ -146,13 +146,13 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize QA system
+    # Khởi tạo hệ thống QA
     qa_system = MedicalQASystem(
         index_dir=args.index_dir,
         model_name=args.model
     )
 
-    # If no query argument provided, run in interactive mode by default
+    # Nếu không cung cấp đối số truy vấn, hãy chạy ở chế độ tương tác theo mặc định
     if args.query:
         result = qa_system.answer_question(args.query)
         print("\n" + "-" * 80)
@@ -164,7 +164,7 @@ def main():
         print(result['answer'])
         print("-" * 80)
     else:
-        # Interactive mode is the default behavior now
+        # Chế độ tương tác là hành vi mặc định hiện nay
         print("Medical QA System (type 'exit' to quit)")
         print(f"Using model: {args.model}")
         print(f"Using index: {args.index_dir}")

@@ -8,7 +8,7 @@ import glob
 import xml.etree.ElementTree as ET
 
 def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-MiniLM-L6-v2"):
-    # Create output directory
+    # Tạo thư mục đầu ra
     os.makedirs(index_output_dir, exist_ok=True)
 
     target_folders = ['1_CancerGov_QA']
@@ -22,7 +22,7 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
 
     print(f"Found {len(xml_files)} XML files")
 
-    # Extract documents and QA pairs
+    # Trích xuất tài liệu và cặp QA
     documents = []
     qa_data = []
 
@@ -31,10 +31,10 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
             tree = ET.parse(xml_file)
             root = tree.getroot()
 
-            # Get the focus (topic) of the document
+            # Lấy trọng tâm (chủ đề) của tài liệu
             focus = root.find("Focus").text
 
-            # Process each QA pair
+            # Xử lý từng cặp QA
             qa_pairs_element = root.find("QAPairs")
             if qa_pairs_element is not None:
                 for qa_pair in qa_pairs_element.findall("QAPair"):
@@ -45,11 +45,11 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
                         question_text = question_element.text.strip()
                         answer_text = answer_element.text.strip()
 
-                        # Create prompt without "Answer:" suffix for document index
+                        # Tạo lời nhắc không có hậu tố "Trả lời:" cho chỉ mục tài liệu
                         document = f"Topic: {focus}\n\nQuestion: {question_text}"
                         documents.append(document)
 
-                        # Store full QA pair for retrieval
+                        # Lưu trữ cặp QA đầy đủ để truy xuất
                         qa_data.append({
                             "prompt": f"{document}\n\nAnswer:",
                             "completion": answer_text
@@ -59,11 +59,11 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
 
     print(f"Extracted {len(documents)} documents for indexing")
 
-    # Load sentence transformer model for encoding
+    # Tải mô hình chuyển đổi câu để mã hóa
     print(f"Loading sentence transformer model: {model_name}")
     model = SentenceTransformer(model_name)
 
-    # Encode documents
+    # Mã hóa tài liệu
     print("Encoding documents...")
     batch_size = 32
     document_embeddings = []
@@ -73,26 +73,26 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
         embeddings = model.encode(batch, convert_to_tensor=True)
         document_embeddings.append(embeddings)
 
-    # Concatenate all embeddings
+    # Nối tất cả các nhúng
     document_embeddings = torch.cat(document_embeddings, dim=0)
     document_embeddings_np = document_embeddings.cpu().numpy()
 
-    # Create FAISS index
+    # Tạo chỉ mục FAISS
     dimension = document_embeddings_np.shape[1]
     index = faiss.IndexFlatL2(dimension)
 
-    # Add vectors to the index
+    # Thêm vectơ vào chỉ mục
     index.add(document_embeddings_np)
     print(f"Created FAISS index with {index.ntotal} vectors of dimension {dimension}")
 
-    # Save the index, documents and metadata
+    # Lưu chỉ mục, tài liệu và siêu dữ liệu
     faiss.write_index(index, os.path.join(index_output_dir, "qa_index1.faiss"))
 
-    # Save documents for retrieval
+    # Lưu tài liệu để truy xuất
     with open(os.path.join(index_output_dir, "documents1.json"), 'w', encoding='utf-8') as f:
         json.dump(documents, f, ensure_ascii=False, indent=2)
 
-    # Save QA data mapping
+    # Lưu dữ liệu QA ánh xạ
     with open(os.path.join(index_output_dir, "qa_mapping1.json"), 'w', encoding='utf-8') as f:
         json.dump(qa_data, f, ensure_ascii=False, indent=2)
 
@@ -101,7 +101,7 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
     return index, documents, document_embeddings_np
 
 
-# Example usage
+# Cách sử dụng ví dụ
 if __name__ == "__main__":
     create_faiss_index_from_xml(
         "data/raw",
