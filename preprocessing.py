@@ -5,7 +5,9 @@ import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
 
-
+# all-MiniLM-L6-v2 properties:
+# - max sequence length: 256 tokens
+# - embedding dimension: 384
 def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-MiniLM-L6-v2"):
     """
     Process XML files and create a FAISS index directly without an intermediate JSON file.
