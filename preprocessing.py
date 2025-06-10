@@ -4,32 +4,21 @@ import faiss
 import torch
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
-
+import glob
+import xml.etree.ElementTree as ET
 
 def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-MiniLM-L6-v2"):
-    """
-    Process XML files and create a FAISS index directly without an intermediate JSON file.
-
-    Args:
-        raw_data_dir: Path to directory containing raw XML data folders
-        index_output_dir: Directory to save the FAISS index and metadata
-        model_name: Name of the sentence transformer model to use for encoding
-
-    Returns:
-        Tuple of (faiss_index, documents, document_embeddings)
-    """
-    import glob
-    import xml.etree.ElementTree as ET
-
     # Create output directory
     os.makedirs(index_output_dir, exist_ok=True)
 
-    # Get all XML files recursively
+    target_folders = ['1_CancerGov_QA']
     xml_files = []
+
     for folder in os.listdir(raw_data_dir):
-        folder_path = os.path.join(raw_data_dir, folder)
-        if os.path.isdir(folder_path):
-            xml_files.extend(glob.glob(os.path.join(folder_path, "*.xml")))
+        if folder in target_folders:
+            folder_path = os.path.join(raw_data_dir, folder)
+            if os.path.isdir(folder_path):
+                xml_files.extend(glob.glob(os.path.join(folder_path, "*.xml")))
 
     print(f"Found {len(xml_files)} XML files")
 
@@ -97,14 +86,14 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
     print(f"Created FAISS index with {index.ntotal} vectors of dimension {dimension}")
 
     # Save the index, documents and metadata
-    faiss.write_index(index, os.path.join(index_output_dir, "qa_index.faiss"))
+    faiss.write_index(index, os.path.join(index_output_dir, "qa_index1.faiss"))
 
     # Save documents for retrieval
-    with open(os.path.join(index_output_dir, "documents.json"), 'w', encoding='utf-8') as f:
+    with open(os.path.join(index_output_dir, "documents1.json"), 'w', encoding='utf-8') as f:
         json.dump(documents, f, ensure_ascii=False, indent=2)
 
     # Save QA data mapping
-    with open(os.path.join(index_output_dir, "qa_mapping.json"), 'w', encoding='utf-8') as f:
+    with open(os.path.join(index_output_dir, "qa_mapping1.json"), 'w', encoding='utf-8') as f:
         json.dump(qa_data, f, ensure_ascii=False, indent=2)
 
     print(f"Saved FAISS index and metadata to {index_output_dir}")
@@ -116,5 +105,5 @@ def create_faiss_index_from_xml(raw_data_dir, index_output_dir, model_name="all-
 if __name__ == "__main__":
     create_faiss_index_from_xml(
         "data/raw",
-        "data/faiss_index"
+        "data/faiss_index1"
     )
