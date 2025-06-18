@@ -3,6 +3,7 @@ import json
 import faiss
 import torch
 import argparse
+import re
 from sentence_transformers import SentenceTransformer
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -76,25 +77,26 @@ class MedicalQASystem:
         context_str = "\n\n".join(context_parts)
 
         prompt = f"""You are a highly knowledgeable medical assistant providing accurate and professional information to healthcare professionals.
-Use the reference information below to answer the medical question comprehensively.
+        Use the reference information below to answer the medical question comprehensively.
 
-Reference Information:
-{context_str}
+        Reference Information:
+        {context_str}
 
-Question: {query}
+        Question: {query}
 
-Instructions:
-1. Provide a clear, concise, and well-organized medical answer.
-2. Use appropriate medical terminology and maintain a professional tone.
-3. Base your answer strictly on the provided reference information.
-4. Do not include any citation numbers, references, or footnote markers (e.g., [1], [2], etc.).
-5. Do not mention the references explicitly in your answer.
-6. Avoid adding phrases like 'End of Medical Answer' or similar concluding statements.
+        Instructions:
+        1. Provide a clear, concise, and well-organized medical answer.
+        2. Use appropriate medical terminology and maintain a professional tone.
+        3. Base your answer strictly on the provided reference information.
+        4. Do not include any citation numbers, references, or footnote markers (e.g., [1], [2], etc.) under any circumstances.
+        5. Do not mention the references explicitly in your answer.
+        6. Avoid adding phrases like 'End of Medical Answer' or similar concluding statements.
 
-Always conclude your answer with this exact disclaimer:
-"Please consult with a qualified healthcare professional for accurate diagnosis and personalized medical advice."
+        Always conclude your answer with this exact disclaimer:
+        "Please consult with a qualified healthcare professional for accurate diagnosis and personalized medical advice."
 
-Answer:"""
+        Answer:"""
+
         return prompt
 
     def generate_answer(self, prompt):
@@ -104,14 +106,17 @@ Answer:"""
         with torch.no_grad():
             outputs = self.model.generate(
                 **inputs,
-                max_new_tokens=1024,
-                temperature=0.5,
+                max_new_tokens=512,
+                temperature=0.3,
                 do_sample=True,
                 top_p=0.85,
-                num_return_sequences=1
+                num_return_sequences=1,
+                eos_token_id=self.model.config.eos_token_id,
             )
 
         response = self.tokenizer.decode(outputs[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+        response = re.sub(r'\[\d+\]', '', response)
+        response = response.split("Please consult with a qualified healthcare professional")[0].strip()
         return response.strip()
 
     def answer_question(self, query):
