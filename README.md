@@ -2,14 +2,6 @@
 
 A Retrieval-Augmented Generation (RAG) system for medical question answering, combining semantic search with large language models to provide accurate and contextually relevant medical information.
 
-## Features
-
-- **RAG Architecture**: Combines FAISS vector search with language models for enhanced accuracy
-- **Medical Data Processing**: Preprocesses medical documents from multiple authoritative sources
-- **Semantic Search**: Uses sentence transformers for similarity-based document retrieval
-- **RLHF Training**: Includes Reinforcement Learning from Human Feedback implementation
-- **Comparative Analysis**: Built-in comparison between RAG and non-RAG responses
-- **Safety Features**: Includes medical disclaimers and professional consultation recommendations
 
 ## Project Structure
 
@@ -56,8 +48,8 @@ A Retrieval-Augmented Generation (RAG) system for medical question answering, co
 
 ### Usage
 
-#### Interactive Demo
-Open and run `Demo.ipynb` in Jupyter Notebook for an interactive experience:
+#### Demo
+Open and run `Demo.ipynb` in Jupyter Notebook
 ```bash
 jupyter notebook Demo.ipynb
 ```
@@ -85,17 +77,6 @@ Access the online demo: [Colab Notebook](https://colab.research.google.com/drive
 - **Encoder**: `all-MiniLM-L6-v2` for semantic embeddings
 - **Generator**: `Qwen/Qwen2.5-0.5B-Instruct` for response generation
 - **Vector Database**: FAISS for efficient similarity search
-
-## Data Sources
-
-The system processes medical Q&A data from multiple authoritative sources:
-
-- CancerGov Q&A
-- GARD (Genetic and Rare Diseases)
-- GHR (Genetics Home Reference)
-- MedlinePlus Health Topics
-- NIDDK, NINDS, CDC, NHLBI databases
-- And more...
 
 ## RLHF Training
 
